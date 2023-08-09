@@ -48,8 +48,9 @@ class Bot(commands.Bot):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send("Command not recognized, please use: !welcome add/edit/remove <username> <custom_message>")
         else:
+            pass
             # Handle other exceptions here if needed
-            print(f"An error occurred: {error}")
+            # print(f"An error occurred: {error}")
 
     @commands.command()
     async def welcome(self, ctx, command= None, name=None, *, custom_message=None):
