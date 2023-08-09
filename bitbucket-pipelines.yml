@@ -22,10 +22,3 @@ pipelines:
             # Enforce style consistency across Python projects https://flake8.pycqa.org
             - pip install flake8
             - flake8 . --extend-exclude=dist,build --show-source --statistics
-      - step:
-          name: Build and Package
-          caches:
-            - pip
-          script:
-            - pip install -r requirements.txt
-            - python -m PyInstaller main.py --onefile
