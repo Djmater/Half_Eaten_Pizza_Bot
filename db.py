@@ -22,6 +22,16 @@ class DB:
                 custom_message TEXT
             )
         """)
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS "quotes" (
+                "Number"	INTEGER NOT NULL UNIQUE,
+                "Quote"	TEXT NOT NULL,
+                "Category"	TEXT,
+                "Added"	TEXT,
+                PRIMARY KEY("Number" AUTOINCREMENT)
+            )
+        """)
+
         self.conn.commit()
 
     def migrate_database(self):
@@ -130,6 +140,26 @@ class DB:
     """
     Quotes
     """
+
+    def add_quote(self):
+        try:
+
+            # Get today's date
+            today = datetime.today()
+
+            # Format the date in the desired format
+            formatted_date = today.strftime('%m/%d/%Y')
+
+            print(formatted_date)
+
+            self.cursor.execute("",
+                                (formatted_date,))
+            self.conn.commit()
+            return True
+        except sqlite3.IntegrityError:
+            # print(f"User '{username}' is already in the database.")
+            self.conn.rollback()
+            return False
 
 
 
