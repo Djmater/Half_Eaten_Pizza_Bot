@@ -1,14 +1,13 @@
 import sys
 import os
-from pathlib import Path
-from config import Config
+
 from configparser import ConfigParser
 
 # Add the parent directory to the sys path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-
-# Import the Config class
+from pathlib import Path
+from config import Config
 
 
 def test_config_variables():
