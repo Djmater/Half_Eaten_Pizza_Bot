@@ -1,4 +1,3 @@
-import twitchio
 from twitchio.ext import commands
 from db import DB
 from datetime import datetime

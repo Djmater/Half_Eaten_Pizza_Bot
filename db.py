@@ -1,7 +1,9 @@
 import sqlite3
 from datetime import datetime
 
-class DB():
+
+class DB:
+
     def __init__(self):
         self.conn = sqlite3.connect("specific_users.db")
         self.cursor = self.conn.cursor()
@@ -18,12 +20,13 @@ class DB():
     def add_user(self, username):
         try:
             timestring = "1970-01-01T00:00:00"
-            self.cursor.execute("INSERT INTO specific_users (username, lastmessage) VALUES (?,?)", (username, timestring,))
+            self.cursor.execute("INSERT INTO specific_users (username, lastmessage) VALUES (?,?)",
+                                (username, timestring,))
             self.conn.commit()
             return True
-        except sqlite3.IntegrityError as e:
-            #print(f"User '{username}' is already in the database.")
-            self.conn.rollback() 
+        except sqlite3.IntegrityError:
+            # print(f"User '{username}' is already in the database.")
+            self.conn.rollback()
             return False
 
     def fetch_names(self):
@@ -39,7 +42,6 @@ class DB():
             return True  # Return true
         else:
             return False  # Return false
-        
 
     def check_lastmessage(self, username):
         self.cursor.execute("SELECT lastmessage FROM specific_users WHERE username = ?", (username,))
@@ -48,7 +50,7 @@ class DB():
             return result[0]  # Return the last message time as a string
         else:
             return None  # Return None if the user is not found
-    
+
     def check_custommessage(self, username):
         self.cursor.execute("SELECT custommessage FROM specific_users WHERE username = ?", (username,))
         result = self.cursor.fetchone()
@@ -62,7 +64,8 @@ class DB():
             return False  # Return False if the user is not found
 
     def set_custommessage(self, custommessage, username):
-        self.cursor.execute("UPDATE specific_users SET custommessage = ? WHERE username = ?",(custommessage, username,))
+        self.cursor.execute("UPDATE specific_users SET custommessage = ? WHERE username = ?",
+                            (custommessage, username,))
         self.conn.commit()
         if self.cursor.rowcount == 0:
             return False
@@ -71,7 +74,8 @@ class DB():
 
     def set_lastmessage(self, username):
         last_message_time = datetime.now().isoformat()  # Convert the datetime to a string
-        self.cursor.execute("UPDATE specific_users SET lastmessage = ? WHERE username = ?", (last_message_time, username,))
+        self.cursor.execute("UPDATE specific_users SET lastmessage = ? WHERE username = ?",
+                            (last_message_time, username,))
         self.conn.commit()
 
     def remove_user(self, username):
@@ -81,6 +85,7 @@ class DB():
             return False  # User not found, return False
         else:
             return True  # User successfully removed, return True
+
 
 if __name__ == "__main__":
     db = DB()

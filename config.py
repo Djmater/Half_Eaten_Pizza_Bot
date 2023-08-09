@@ -62,6 +62,3 @@ class Config:
         # Write the new structure to the new file
         with open(r"config.ini", 'w') as configfile:
             write_config.write(configfile)
-
-
-
