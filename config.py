@@ -12,7 +12,7 @@ class Config:
 
     def read_config_file(self):
 
-        if not self.config_file.is_file:
+        if not self.config_file.is_file():
             print("No file")
             self.make_config_file()
             self.write_config_file()

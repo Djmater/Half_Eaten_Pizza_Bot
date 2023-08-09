@@ -51,3 +51,5 @@ Thumbs.db
 config.ini
 *.ini
 *.db
+/build
+*.spec
