@@ -79,7 +79,7 @@ class Bot(commands.Bot):
                     if not result:
                         await ctx.send("User already exist")
                         return
-                    db.set_custommessage(custom_message, name)
+                    db.set_custom_message(custom_message, name)
                     if result:
                         await ctx.send(f"{name} added to the welcome list")
                 except:
@@ -89,14 +89,14 @@ class Bot(commands.Bot):
 
             elif command.lower() == "edit":
                 # print(custom_message, name)
-                result = db.set_custommessage(custom_message, name)
+                result = db.set_custom_message(custom_message, name)
                 if not result:
                     await ctx.send(f"{name} is not recognised or added to welcome list")
                 if result:
                     await ctx.send(f"{name} new custom message is {custom_message}")
 
     def check_time_difference(self, message_author):
-        timestamp_str = db.check_lastmessage(message_author)
+        timestamp_str = db.check_last_message(message_author)
         timestamp = datetime.fromisoformat(timestamp_str)
         current_time = datetime.now()
 
@@ -117,11 +117,11 @@ class Bot(commands.Bot):
             if self.check_time_difference(name):
 
                 # Setting new chatting time
-                db.set_lastmessage(name)
+                db.set_last_message(name)
 
                 # Checking if user has a custom message, if not will use default message
-                if db.check_custommessage(name):
-                    welcome_message = db.check_custommessage(name)
+                if db.check_custom_message(name):
+                    welcome_message = db.check_custom_message(name)
                     await message.channel.send(welcome_message)
             else:
                 print("Not long enough")
