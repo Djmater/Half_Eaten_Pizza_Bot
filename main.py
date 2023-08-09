@@ -52,7 +52,7 @@ class Bot(commands.Bot):
             # print(f"An error occurred: {error}")
 
     @commands.command()
-    async def welcome(self, ctx, command= None, name=None, *, custom_message=None):
+    async def welcome(self, ctx, command=None, name=None, *, custom_message=None):
         user = ctx.author.is_mod
         if user:
             if not command:
@@ -74,18 +74,14 @@ class Bot(commands.Bot):
 
                 if name.startswith('@'):
                     name = name[1:]
-                try:
-                    result = db.add_user(name)
-                    if not result:
-                        await ctx.send("User already exist")
-                        return
-                    db.set_custommessage(custom_message, name)
-                    if result:
-                        await ctx.send(f"{name} added to the welcome list")
-                except:
-                    pass
-                    # print("already added")
-                # print(custom_message)
+
+                result = db.add_user(name)
+                if not result:
+                    await ctx.send("User already exist")
+                    return
+                db.set_custommessage(custom_message, name)
+                if result:
+                    await ctx.send(f"{name} added to the welcome list")
 
             elif command.lower() == "edit":
                 # print(custom_message, name)
