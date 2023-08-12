@@ -1,13 +1,23 @@
-from twitchio.ext import commands
-from db import DB
+# -*- coding: utf-8 -*-
+"""
+Importing packages needed for the bot to function,
+"""
 from datetime import datetime
 from configparser import ConfigParser
+from twitchio.ext import commands
 from twitchio.ext.commands.errors import MissingRequiredArgument
-
+from db import DB
 from config import Config
 
 
 class Bot(commands.Bot):
+    """
+    The core of the bot where it handles messages, Exceptions.
+
+    TODO:
+        Set up Cogs to split and handle commands better.
+        Write better documentation.
+    """
     def __init__(self, twitch_config):
 
         self.twitch_token = twitch_config.twitch_token
@@ -27,6 +37,11 @@ class Bot(commands.Bot):
         print(f'User id is | {self.user_id}')
 
     async def event_message(self, message):
+        """
+        Reading chat messages and sending events if commands are found
+        :param message:
+        :return:
+        """
         # Messages with echo set to True are messages sent by the bot...
         # For now, we just want to ignore them...
         if message.echo:
@@ -41,6 +56,12 @@ class Bot(commands.Bot):
         await self.welcome_message(message.author.name, message)
 
     async def event_command_error(self, ctx, error):
+        """
+        Handler for command errors
+        :param ctx: Context
+        :param error: What error is raised
+        :return: Nothing
+        """
         if isinstance(error, commands.CommandNotFound):
             # await ctx.send("Command not recognized. Please use valid commands.")
             pass
@@ -53,6 +74,16 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def welcome(self, ctx, command= None, name=None, *, custom_message=None):
+        """
+        Function to Remove/Add/Edit users to Welcome message system
+
+        Args:
+            :param ctx: Context from message in chat
+            :param command: Remove/Add/Edit
+            :param name: Name for user
+            :param custom_message: Picks up any after name
+        :return: Nothing
+        """
         user = ctx.author.is_mod
         if user:
             if not command:
@@ -74,18 +105,14 @@ class Bot(commands.Bot):
 
                 if name.startswith('@'):
                     name = name[1:]
-                try:
-                    result = db.add_user(name)
-                    if not result:
-                        await ctx.send("User already exist")
-                        return
-                    db.set_custom_message(custom_message, name)
-                    if result:
-                        await ctx.send(f"{name} added to the welcome list")
-                except:
-                    pass
-                    # print("already added")
-                # print(custom_message)
+
+                result = db.add_user(name)
+                if not result:
+                    await ctx.send("User already exist")
+                    return
+                db.set_custom_message(custom_message, name)
+                if result:
+                    await ctx.send(f"{name} added to the welcome list")
 
             elif command.lower() == "edit":
                 # print(custom_message, name)
@@ -96,6 +123,11 @@ class Bot(commands.Bot):
                     await ctx.send(f"{name} new custom message is {custom_message}")
 
     def check_time_difference(self, message_author):
+        """
+        Checking if the user has waited long enough for Welcome message to be sent
+        :param message_author: Name of the user we are checking
+        :return: True if it's true
+        """
         timestamp_str = db.check_last_message(message_author)
         timestamp = datetime.fromisoformat(timestamp_str)
         current_time = datetime.now()
@@ -105,12 +137,14 @@ class Bot(commands.Bot):
         if time_difference_minutes > self.welcome_cooldown:
             # print(f"Time is more than 2 minutes in difference: {time_difference_minutes} minutes")
             return True
-        else:
-            # print(f"Time is less than or equal to 2 minutes in difference: {time_difference_minutes} minutes")
-            return False
 
     async def welcome_message(self, name, message):
-
+        """
+        Here we process if the user is in DB, then if the time difference is big enough then send welcome message
+        :param name: Name of the user
+        :param message: To send the message in the chat
+        :return:
+        """
         if db.check_user(name):
 
             # Checking if sufficient time has passed
