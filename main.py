@@ -158,7 +158,7 @@ class Bot(commands.Bot):
                     welcome_message = db.check_custom_message(name)
                     await message.channel.send(welcome_message)
             else:
-                print("Not long enough")
+                #print("Not long enough")
                 return
 
 

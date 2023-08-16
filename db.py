@@ -1,9 +1,20 @@
+# -*- coding: utf-8 -*-
+"""
+Importing packages needed for the bot to function,
+"""
 import sqlite3
 import os
 from datetime import datetime
 
 
 class DB:
+    """
+    DB handling
+
+    TODO:
+        Make Add user into 1 system rather than 2, EG: Add user and change message.
+        Write better documentation.
+    """
 
     def __init__(self):
         self.db_file = "database.db"
@@ -35,6 +46,10 @@ class DB:
         self.conn.commit()
 
     def migrate_database(self):
+        """
+        For migrating from 1 DB to another DB
+        :return:
+        """
         try:
             old_db_conn = sqlite3.connect("specific_users.db")
             old_db_cursor = old_db_conn.cursor()
@@ -69,6 +84,11 @@ class DB:
     """
 
     def add_user(self, username):
+        """
+        Adding user to database for welcome message
+        :param username: name of the user you try to add
+        :return:
+        """
         try:
             timestring = "1970-01-01T00:00:00"
             self.cursor.execute("INSERT INTO welcome_message (username, last_message) VALUES (?,?)",
@@ -81,10 +101,14 @@ class DB:
             return False
 
     def fetch_names(self):
+        """
+        Fetching if user is in the list
+        :return:
+        """
         # Retrieve the list of specific users from the database
         self.cursor.execute("SELECT username FROM welcome_message")
-        self.specific_users = {row[0].lower() for row in self.cursor.fetchall()}
-        return self.specific_users
+        specific_users = {row[0].lower() for row in self.cursor.fetchall()}
+        return specific_users
 
     def check_user(self, username):
         self.cursor.execute("SELECT username FROM welcome_message WHERE username = ?", (username,))
@@ -161,6 +185,9 @@ class DB:
             self.conn.rollback()
             return False
 
+    """
+    Auto shoutout
+    """
 
 
 if __name__ == "__main__":
