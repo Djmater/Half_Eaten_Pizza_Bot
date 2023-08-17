@@ -76,7 +76,6 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def welcome(self, ctx, command=None, name=None, *, custom_message=None):
-
         """
         Function to Remove/Add/Edit users to Welcome message system
 
@@ -87,7 +86,6 @@ class Bot(commands.Bot):
             :param custom_message: Picks up any after name
         :return: Nothing
         """
-
         user = ctx.author.is_mod
         if user:
             if not command:

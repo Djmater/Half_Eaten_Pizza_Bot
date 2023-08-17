@@ -201,7 +201,7 @@ class DB:
         result = self.cursor.fetchone()
         if result:
 
-            self.cursor.execute("SELECT shoutout FROM shoutout WHERE username = ?",(username,))
+            self.cursor.execute("SELECT shoutout FROM shoutout WHERE username = ?", (username,))
             result = self.cursor.fetchone()
             if result[0] == 1:
 
@@ -218,7 +218,7 @@ class DB:
             timestring = "1970-01-01T00:00:00"
             print("adding user")
             self.cursor.execute("INSERT INTO shoutout (username, last_message,shoutout) VALUES (?,?,?)",
-                                (username, timestring,1,))
+                                (username, timestring, 1,))
             self.conn.commit()
 
     def check_shoutout(self, username):
