@@ -1,13 +1,24 @@
-from twitchio.ext import commands
-from db import DB
+# -*- coding: utf-8 -*-
+"""
+Importing packages needed for the bot to function,
+"""
 from datetime import datetime
 from configparser import ConfigParser
+from twitchio.ext import commands
 from twitchio.ext.commands.errors import MissingRequiredArgument
-
+from db import DB
 from config import Config
 
 
 class Bot(commands.Bot):
+    """
+    The core of the bot where it handles messages, Exceptions.
+
+    TODO:
+        Set up Cogs to split and handle commands better.
+        Write better documentation.
+    """
+
     def __init__(self, twitch_config):
 
         self.twitch_token = twitch_config.twitch_token
@@ -27,6 +38,11 @@ class Bot(commands.Bot):
         print(f'User id is | {self.user_id}')
 
     async def event_message(self, message):
+        """
+        Reading chat messages and sending events if commands are found
+        :param message:
+        :return:
+        """
         # Messages with echo set to True are messages sent by the bot...
         # For now, we just want to ignore them...
         if message.echo:
@@ -39,8 +55,15 @@ class Bot(commands.Bot):
 
         # Checking if user is in db
         await self.welcome_message(message.author.name, message)
+        await self.shoutout_message(message.author.name, message)
 
     async def event_command_error(self, ctx, error):
+        """
+        Handler for command errors
+        :param ctx: Context
+        :param error: What error is raised
+        :return: Nothing
+        """
         if isinstance(error, commands.CommandNotFound):
             # await ctx.send("Command not recognized. Please use valid commands.")
             pass
@@ -53,6 +76,19 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def welcome(self, ctx, command=None, name=None, *, custom_message=None):
+<<<<<<< HEAD
+=======
+        """
+        Function to Remove/Add/Edit users to Welcome message system
+
+        Args:
+            :param ctx: Context from message in chat
+            :param command: Remove/Add/Edit
+            :param name: Name for user
+            :param custom_message: Picks up any after name
+        :return: Nothing
+        """
+>>>>>>> 78bc528371d5516e18742f5eff905574967f0e8a
         user = ctx.author.is_mod
         if user:
             if not command:
@@ -79,20 +115,39 @@ class Bot(commands.Bot):
                 if not result:
                     await ctx.send("User already exist")
                     return
+<<<<<<< HEAD
                 db.set_custommessage(custom_message, name)
+=======
+                db.set_custom_message(custom_message, name)
+>>>>>>> 78bc528371d5516e18742f5eff905574967f0e8a
                 if result:
                     await ctx.send(f"{name} added to the welcome list")
 
             elif command.lower() == "edit":
                 # print(custom_message, name)
-                result = db.set_custommessage(custom_message, name)
+                result = db.set_custom_message(custom_message, name)
                 if not result:
                     await ctx.send(f"{name} is not recognised or added to welcome list")
                 if result:
                     await ctx.send(f"{name} new custom message is {custom_message}")
 
-    def check_time_difference(self, message_author):
-        timestamp_str = db.check_lastmessage(message_author)
+    @commands.command()
+    async def toggle_shoutout(self, ctx, name):
+        user = ctx.author.is_mod
+        if user:
+            db.toggle_shoutout(name)
+
+    def check_time_difference(self, message_author, type):
+        """
+        Checking if the user has waited long enough for Welcome message to be sent
+        :param type: what type of type check, if its shoutout or welcome
+        :param message_author: Name of the user we are checking
+        :return: True if it's true
+        """
+        if type == "welcome":
+            timestamp_str = db.check_last_message(message_author)
+        elif type == "shoutout":
+            timestamp_str = db.check_last_shoutout(message_author)
         timestamp = datetime.fromisoformat(timestamp_str)
         current_time = datetime.now()
 
@@ -101,26 +156,34 @@ class Bot(commands.Bot):
         if time_difference_minutes > self.welcome_cooldown:
             # print(f"Time is more than 2 minutes in difference: {time_difference_minutes} minutes")
             return True
-        else:
-            # print(f"Time is less than or equal to 2 minutes in difference: {time_difference_minutes} minutes")
-            return False
 
-    async def welcome_message(self, name, message):
+    async def shoutout_message(self, message_author, message):
+        if db.check_shoutout(username=message_author):
+            if self.check_time_difference(message_author=message_author, type="shoutout"):
+                db.set_last_shoutout(username=message_author)
+                await message.channel.send(f"!shoutout @{message_author}")
 
-        if db.check_user(name):
+    async def welcome_message(self, message_author, message):
+        """
+        Here we process if the user is in DB, then if the time difference is big enough then send welcome message
+        :param message_author:  Name of the user
+        :param message: To send the message in the chat
+        :return:
+        """
+        if db.check_user(message_author):
 
             # Checking if sufficient time has passed
-            if self.check_time_difference(name):
+            if self.check_time_difference(message_author, type="welcome"):
 
                 # Setting new chatting time
-                db.set_lastmessage(name)
+                db.set_last_message(message_author)
 
                 # Checking if user has a custom message, if not will use default message
-                if db.check_custommessage(name):
-                    welcome_message = db.check_custommessage(name)
+                if db.check_custom_message(message_author):
+                    welcome_message = db.check_custom_message(message_author)
                     await message.channel.send(welcome_message)
             else:
-                print("Not long enough")
+                # print("Not long enough")
                 return
 
 

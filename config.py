@@ -47,7 +47,7 @@ class Config:
         write_config = self.configparser
 
         # Add the structure to the file we will create
-        token = input("Please input Twitch Token:")
+        token = input("Please input Twitch Token, token can be found on https://twitchtokengenerator.com/:")
         write_config.set('Twitch', 'token', token)
 
         prefix = input("Please input Twitch Prefix:")

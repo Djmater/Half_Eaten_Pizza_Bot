@@ -13,6 +13,7 @@
 1. Add
 2. Edit
 3. Remove
+## Auto Shoutout(Yet to add)
 ## Quote(Yet to add)
 1. Add
 2. Edit
