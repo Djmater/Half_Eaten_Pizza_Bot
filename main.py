@@ -76,8 +76,6 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def welcome(self, ctx, command=None, name=None, *, custom_message=None):
-<<<<<<< HEAD
-=======
         """
         Function to Remove/Add/Edit users to Welcome message system
 
@@ -88,7 +86,6 @@ class Bot(commands.Bot):
             :param custom_message: Picks up any after name
         :return: Nothing
         """
->>>>>>> 78bc528371d5516e18742f5eff905574967f0e8a
         user = ctx.author.is_mod
         if user:
             if not command:
@@ -115,11 +112,8 @@ class Bot(commands.Bot):
                 if not result:
                     await ctx.send("User already exist")
                     return
-<<<<<<< HEAD
-                db.set_custommessage(custom_message, name)
-=======
                 db.set_custom_message(custom_message, name)
->>>>>>> 78bc528371d5516e18742f5eff905574967f0e8a
+
                 if result:
                     await ctx.send(f"{name} added to the welcome list")
 
