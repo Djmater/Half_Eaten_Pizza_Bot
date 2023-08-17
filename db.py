@@ -42,6 +42,13 @@ class DB:
                 PRIMARY KEY("Number" AUTOINCREMENT)
             )
         """)
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS "shoutout" (
+                username TEXT PRIMARY KEY, 
+                last_message TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                shoutout INTEGER
+            )
+        """)
 
         self.conn.commit()
 
@@ -189,10 +196,53 @@ class DB:
     Auto shoutout
     """
 
+    def toggle_shoutout(self, username):
+        self.cursor.execute("SELECT username FROM shoutout WHERE username = ?", (username,))
+        result = self.cursor.fetchone()
+        if result:
+
+            self.cursor.execute("SELECT shoutout FROM shoutout WHERE username = ?",(username,))
+            result = self.cursor.fetchone()
+            if result[0] == 1:
+
+                self.cursor.execute("UPDATE shoutout SET shoutout = ? WHERE username = ?",
+                                    (0, username))
+                self.conn.commit()
+            else:
+                print("second else done")
+                self.cursor.execute("UPDATE shoutout SET shoutout = ? WHERE username = ?",
+                                    (1, username))
+                self.conn.commit()
+
+        else:
+            timestring = "1970-01-01T00:00:00"
+            print("adding user")
+            self.cursor.execute("INSERT INTO shoutout (username, last_message,shoutout) VALUES (?,?,?)",
+                                (username, timestring,1,))
+            self.conn.commit()
+
+    def check_shoutout(self, username):
+        self.cursor.execute("SELECT shoutout FROM shoutout WHERE username = ?", (username,))
+        result = self.cursor.fetchone()
+        return result
+
+    def check_last_shoutout(self, username):
+        self.cursor.execute("SELECT last_message FROM shoutout WHERE username = ?", (username,))
+        result = self.cursor.fetchone()
+        if result:
+            return result[0]  # Return the last message time as a string
+        else:
+            return None  # Return None if the user is not found
+
+    def set_last_shoutout(self, username):
+        last_message_time = datetime.now().isoformat()  # Convert the datetime to a string
+        self.cursor.execute("UPDATE shoutout SET last_message = ? WHERE username = ?",
+                            (last_message_time, username,))
+        self.conn.commit()
+
 
 if __name__ == "__main__":
     db = DB()
-
-    print(db.check_user('djmater'))
-    print(db.remove_user('djmater'))
+    db.toggle_shoutout("djmater")
+    db.check_shoutout("djmater")
     db.conn.close()  # Close the database connection when you're done with it

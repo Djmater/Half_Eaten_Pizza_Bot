@@ -18,6 +18,7 @@ class Bot(commands.Bot):
         Set up Cogs to split and handle commands better.
         Write better documentation.
     """
+
     def __init__(self, twitch_config):
 
         self.twitch_token = twitch_config.twitch_token
@@ -54,6 +55,7 @@ class Bot(commands.Bot):
 
         # Checking if user is in db
         await self.welcome_message(message.author.name, message)
+        await self.shoutout_message(message.author.name, message)
 
     async def event_command_error(self, ctx, error):
         """
@@ -73,7 +75,7 @@ class Bot(commands.Bot):
             # print(f"An error occurred: {error}")
 
     @commands.command()
-    async def welcome(self, ctx, command= None, name=None, *, custom_message=None):
+    async def welcome(self, ctx, command=None, name=None, *, custom_message=None):
         """
         Function to Remove/Add/Edit users to Welcome message system
 
@@ -122,13 +124,23 @@ class Bot(commands.Bot):
                 if result:
                     await ctx.send(f"{name} new custom message is {custom_message}")
 
-    def check_time_difference(self, message_author):
+    @commands.command()
+    async def toggle_shoutout(self, ctx, name):
+        user = ctx.author.is_mod
+        if user:
+            db.toggle_shoutout(name)
+
+    def check_time_difference(self, message_author, type):
         """
         Checking if the user has waited long enough for Welcome message to be sent
+        :param type: what type of type check, if its shoutout or welcome
         :param message_author: Name of the user we are checking
         :return: True if it's true
         """
-        timestamp_str = db.check_last_message(message_author)
+        if type == "welcome":
+            timestamp_str = db.check_last_message(message_author)
+        elif type == "shoutout":
+            timestamp_str = db.check_last_shoutout(message_author)
         timestamp = datetime.fromisoformat(timestamp_str)
         current_time = datetime.now()
 
@@ -138,27 +150,33 @@ class Bot(commands.Bot):
             # print(f"Time is more than 2 minutes in difference: {time_difference_minutes} minutes")
             return True
 
-    async def welcome_message(self, name, message):
+    async def shoutout_message(self, message_author, message):
+        if db.check_shoutout(username=message_author):
+            if self.check_time_difference(message_author=message_author, type="shoutout"):
+                db.set_last_shoutout(username=message_author)
+                await message.channel.send(f"!shoutout @{message_author}")
+
+    async def welcome_message(self, message_author, message):
         """
         Here we process if the user is in DB, then if the time difference is big enough then send welcome message
-        :param name: Name of the user
+        :param message_author:  Name of the user
         :param message: To send the message in the chat
         :return:
         """
-        if db.check_user(name):
+        if db.check_user(message_author):
 
             # Checking if sufficient time has passed
-            if self.check_time_difference(name):
+            if self.check_time_difference(message_author, type="welcome"):
 
                 # Setting new chatting time
-                db.set_last_message(name)
+                db.set_last_message(message_author)
 
                 # Checking if user has a custom message, if not will use default message
-                if db.check_custom_message(name):
-                    welcome_message = db.check_custom_message(name)
+                if db.check_custom_message(message_author):
+                    welcome_message = db.check_custom_message(message_author)
                     await message.channel.send(welcome_message)
             else:
-                #print("Not long enough")
+                # print("Not long enough")
                 return
 
 
