@@ -130,6 +130,8 @@ class Bot(commands.Bot):
     async def toggle_shoutout(self, ctx, name):
         user = ctx.author.is_mod
         if user:
+            if name.startswith('@'):
+                name = name[1:]
             result, flag = db.toggle_shoutout(name)
             if result:
                 if result == 3:
@@ -164,7 +166,7 @@ class Bot(commands.Bot):
         if db.check_shoutout(username=message_author)[0]:
             if self.check_time_difference(message_author=message_author, type="shoutout"):
                 db.set_last_shoutout(username=message_author)
-                await message.channel.send(f"!shoutout @{message_author}")
+                await message.channel.send(f"/shoutout {message_author}")
 
     async def welcome_message(self, message_author, message):
         """
