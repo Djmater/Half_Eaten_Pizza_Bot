@@ -130,7 +130,15 @@ class Bot(commands.Bot):
     async def toggle_shoutout(self, ctx, name):
         user = ctx.author.is_mod
         if user:
-            db.toggle_shoutout(name)
+            result, flag = db.toggle_shoutout(name)
+            if result:
+                if result == 3:
+                    await ctx.send(f"{name} is added to auto shoutout list")
+                elif flag:
+                    status = "Enabled"
+                else:
+                    status = "Disabled"
+                await ctx.send(f"Auto shoutout is set to {status} on {name}")
 
     def check_time_difference(self, message_author, type):
         """
@@ -153,7 +161,7 @@ class Bot(commands.Bot):
             return True
 
     async def shoutout_message(self, message_author, message):
-        if db.check_shoutout(username=message_author):
+        if db.check_shoutout(username=message_author)[0]:
             if self.check_time_difference(message_author=message_author, type="shoutout"):
                 db.set_last_shoutout(username=message_author)
                 await message.channel.send(f"!shoutout @{message_author}")
