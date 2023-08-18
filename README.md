@@ -13,7 +13,10 @@
 1. Add
 2. Edit
 3. Remove
-## Auto Shoutout(Yet to add)
+4. View
+## Auto Shoutout
+1. Toggle
+2. View
 ## Quote(Yet to add)
 1. Add
 2. Edit

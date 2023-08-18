@@ -201,25 +201,28 @@ class DB:
         result = self.cursor.fetchone()
         if result:
 
-            self.cursor.execute("SELECT shoutout FROM shoutout WHERE username = ?",(username,))
+            self.cursor.execute("SELECT shoutout FROM shoutout WHERE username = ?", (username,))
             result = self.cursor.fetchone()
             if result[0] == 1:
 
                 self.cursor.execute("UPDATE shoutout SET shoutout = ? WHERE username = ?",
                                     (0, username))
                 self.conn.commit()
+                return True, 0
             else:
-                print("second else done")
+
                 self.cursor.execute("UPDATE shoutout SET shoutout = ? WHERE username = ?",
                                     (1, username))
                 self.conn.commit()
+                return True, 1
 
         else:
             timestring = "1970-01-01T00:00:00"
             print("adding user")
             self.cursor.execute("INSERT INTO shoutout (username, last_message,shoutout) VALUES (?,?,?)",
-                                (username, timestring,1,))
+                                (username, timestring, 1,))
             self.conn.commit()
+            return 3, 1
 
     def check_shoutout(self, username):
         self.cursor.execute("SELECT shoutout FROM shoutout WHERE username = ?", (username,))
