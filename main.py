@@ -148,7 +148,7 @@ eg: !autoSo view djmater
                 if result:
                     await ctx.send(f"{username} new custom message is {custom_message}")
 
-    @commands.command()
+    @commands.command(aliases=("autoso",))
     async def autoSo(self, ctx, command, username):
         user = ctx.author.is_mod
         if user:
@@ -194,10 +194,11 @@ eg: !autoSo view djmater
             return True
 
     async def shoutout_message(self, message_author, message):
-        if db.check_shoutout(username=message_author)[0]:
-            if self.check_time_difference(message_author=message_author, type="shoutout"):
-                db.set_last_shoutout(username=message_author)
-                await message.channel.send(f"/shoutout {message_author}")
+        if db.check_shoutout_user(username=message_author):
+            if db.check_shoutout(username=message_author)[0]:
+                if self.check_time_difference(message_author=message_author, type="shoutout"):
+                    db.set_last_shoutout(username=message_author)
+                    await message.channel.send(f"/shoutout {message_author}")
 
     async def welcome_message(self, message_author, message):
         """
