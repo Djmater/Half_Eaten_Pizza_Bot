@@ -243,6 +243,14 @@ class DB:
                             (last_message_time, username,))
         self.conn.commit()
 
+    def check_shoutout_user(self, username):
+        self.cursor.execute("SELECT username FROM shoutout WHERE username = ?", (username,))
+        result = self.cursor.fetchone()
+        if result:
+            return True  # Return true
+        else:
+            return False  # Return false
+
 
 if __name__ == "__main__":
     db = DB()
