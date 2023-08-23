@@ -40,7 +40,7 @@ class AutoShoutOut(commands.Cog):
             raise MissingRequiredArgument("username")
 
         result = self.db.check_shoutout(username)
-        if result:
+        if result[0]:
             status = "On"
         else:
             status = "Off"
