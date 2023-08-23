@@ -4,10 +4,15 @@ Importing packages needed for the bot to function,
 """
 from datetime import datetime
 from configparser import ConfigParser
+from typing import Optional, List
+
+from twitchio import User
 from twitchio.ext import commands
 from twitchio.ext.commands.errors import MissingRequiredArgument
 from db import DB
 from config import Config
+from cogs.welcome import WelcomeMessageCog
+from cogs.autoso import AutoShoutOut
 
 
 class Bot(commands.Bot):
@@ -15,7 +20,6 @@ class Bot(commands.Bot):
     The core of the bot where it handles messages, Exceptions.
 
     TODO:
-        Set up Cogs to split and handle commands better.
         Write better documentation.
     """
 
@@ -31,9 +35,11 @@ class Bot(commands.Bot):
         super().__init__(token=self.twitch_token, prefix=self.twitch_prefix,
                          initial_channels=self.twitch_initial_channels)
 
+
     async def event_ready(self):
-        # Notify us when everything is ready!
-        # We are logged in and ready to chat and use commands...
+        """
+        Notifying that bot is ready and prints command and welcome list
+        """
         print(f'Logged in as | {self.nick}')
         print(f'User id is | {self.user_id}')
         print("""
@@ -52,6 +58,13 @@ autoSo
     
 eg: !autoSo view djmater
         """)
+        print("""
+Welcome List
+        """)
+        for i in db.fetch_names():
+            custom_message = db.check_custom_message(i)
+            final_string = f"{i} - {custom_message}"
+            print(final_string)
 
     async def event_message(self, message):
         """
@@ -90,88 +103,43 @@ eg: !autoSo view djmater
             # Handle other exceptions here if needed
             # print(f"An error occurred: {error}")
 
-    @commands.command()
-    async def welcome(self, ctx, command=None, username=None, *, custom_message=None):
+    async def fetch_users(
+            self,
+            names: List[str] = None,
+            ids: List[int] = None,
+            token: str = None,
+            force=False,
+    ) -> List[User]:
         """
-        Function to Remove/Add/Edit users to Welcome message system
-
-        Args:
-            :param ctx: Context from message in chat
-            :param command: Remove/Add/Edit
-            :param username: username for user
-            :param custom_message: Picks up any after username
-        :return: Nothing
+        Fetch user info on twitch, so we have the Twitch ID
+        :param names:
+        :param ids:
+        :param token:
+        :param force:
+        :return:
         """
-        user = ctx.author.is_mod
-        if user:
-            if not command:
-                raise MissingRequiredArgument("username and custom_message")
+        data = await self._http.get_users(ids, names, token=token)
+        return data
 
-            if command.lower() == "view":
-                result = db.check_custom_message(username)
-                if result:
-                    await ctx.send(f"The current welcome message for {username} is {result}")
-                    return
+    async def fetch_channels(self, broadcaster_ids, token: Optional[str] = None):
+        """
+        Fetch Channel information, so we get the game_name
+        :param broadcaster_ids: The twitch id of who you want to search for
+        :param token:
+        :return: Returning a list of data that's in a dictionary
 
-            if command.lower() == "remove":
-                result = db.remove_user(username)
-                if result:
-                    # print(result)
-                    await ctx.send(f"{username} is successfully removed")
-                else:
-                    await ctx.send(f"{username} is not recognised or added to welcome list")
-                return
-
-            if not username or not custom_message:
-                raise MissingRequiredArgument("username and custom_message")
-
-            if command.lower() == "add":
-
-                if username.startswith('@'):
-                    username = username[1:]
-
-                result = db.add_user(username)
-                if not result:
-                    await ctx.send("User already exist")
-                    return
-
-                db.set_custom_message(custom_message, username)
-
-                if result:
-                    await ctx.send(f"{username} added to the welcome list")
-
-            elif command.lower() == "edit":
-                # print(custom_message, username)
-                result = db.set_custom_message(custom_message, username)
-                if not result:
-                    await ctx.send(f"{username} is not recognised or added to welcome list")
-                if result:
-                    await ctx.send(f"{username} new custom message is {custom_message}")
-
-    @commands.command(aliases=("autoso",))
-    async def autoSo(self, ctx, command, username):
-        user = ctx.author.is_mod
-        if user:
-            if command.lower() == "view":
-                result = db.check_shoutout(username)
-                if result:
-                    status = "On"
-                else:
-                    status = "Off"
-                await ctx.send(f"Auto shoutout for {username} is currently {status}")
-
-            if command.lower() == "toggle":
-                if username.startswith('@'):
-                    username = username[1:]
-                result, flag = db.toggle_shoutout(username)
-                if result:
-                    if result == 3:
-                        await ctx.send(f"{username} is added to auto shoutout list")
-                    elif flag:
-                        status = "On"
-                    else:
-                        status = "Off"
-                    await ctx.send(f"Auto shoutout is set to {status} on {username}")
+        content_classification_labels
+        delay
+        game_id
+        game_name
+        is_branded_content
+        language
+        tags
+        title
+        user
+        """
+        data = await self._http.get_channels_new(broadcaster_ids=broadcaster_ids, token=token)
+        return data
 
     def check_time_difference(self, message_author, type):
         """
@@ -194,18 +162,28 @@ eg: !autoSo view djmater
             return True
 
     async def shoutout_message(self, message_author, message):
+        """
+        Auto shoutout that will shoutout anyone that fulfills the criteria.
+        :param message_author: Who wrote in the chat
+        :param message: Just passing message function into to be able to send message
+        :return: None
+        """
         if db.check_shoutout_user(username=message_author):
             if db.check_shoutout(username=message_author)[0]:
                 if self.check_time_difference(message_author=message_author, type="shoutout"):
                     db.set_last_shoutout(username=message_author)
-                    await message.channel.send(f"/shoutout {message_author}")
+                    result = await self.fetch_users([message_author], token=self.twitch_token)
+                    game_name = await self.fetch_channels([result[0]['id']])
+                    game_name = game_name[0]['game_name']
+                    await message.channel.send(
+                        f"Checkout {message_author} they were last playing {game_name} you should deff give them a follow https://twitch.tv/{message_author}")
 
     async def welcome_message(self, message_author, message):
         """
         Here we process if the user is in DB, then if the time difference is big enough then send welcome message
         :param message_author:  Name of the user
         :param message: To send the message in the chat
-        :return:
+        :return: None
         """
         if db.check_user(message_author):
 
@@ -230,6 +208,8 @@ if __name__ == "__main__":
         config.read_config_file()
         db = DB()
         bot = Bot(config)
+        bot.add_cog(WelcomeMessageCog(bot, db))
+        bot.add_cog(AutoShoutOut(bot,db))
         bot.run()
     except Exception as e:
         print(e)
