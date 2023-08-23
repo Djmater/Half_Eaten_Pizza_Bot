@@ -164,9 +164,9 @@ class DB:
         self.cursor.execute("DELETE FROM welcome_message WHERE username = ?", (username,))
         self.conn.commit()
         if self.cursor.rowcount == 0:
-            return False  # User not found, return False
+            return False
         else:
-            return True  # User successfully removed, return True
+            return True
 
     """
     Quotes
@@ -197,30 +197,20 @@ class DB:
     """
 
     def toggle_shoutout(self, username):
-        self.cursor.execute("SELECT username FROM shoutout WHERE username = ?", (username,))
+        query = "SELECT shoutout FROM shoutout WHERE username = ?"
+        self.cursor.execute(query, (username,))
         result = self.cursor.fetchone()
+
         if result:
-
-            self.cursor.execute("SELECT shoutout FROM shoutout WHERE username = ?", (username,))
-            result = self.cursor.fetchone()
-            if result[0] == 1:
-
-                self.cursor.execute("UPDATE shoutout SET shoutout = ? WHERE username = ?",
-                                    (0, username))
-                self.conn.commit()
-                return True, 0
-            else:
-
-                self.cursor.execute("UPDATE shoutout SET shoutout = ? WHERE username = ?",
-                                    (1, username))
-                self.conn.commit()
-                return True, 1
-
+            new_flag = 1 if result[0] == 0 else 0
+            query = "UPDATE shoutout SET shoutout = ? WHERE username = ?"
+            self.cursor.execute(query, (new_flag, username))
+            self.conn.commit()
+            return new_flag, new_flag
         else:
             timestring = "1970-01-01T00:00:00"
-            print("adding user")
-            self.cursor.execute("INSERT INTO shoutout (username, last_message,shoutout) VALUES (?,?,?)",
-                                (username, timestring, 1,))
+            query = "INSERT INTO shoutout (username, last_message, shoutout) VALUES (?, ?, ?)"
+            self.cursor.execute(query, (username, timestring, 1))
             self.conn.commit()
             return 3, 1
 
@@ -233,9 +223,9 @@ class DB:
         self.cursor.execute("SELECT last_message FROM shoutout WHERE username = ?", (username,))
         result = self.cursor.fetchone()
         if result:
-            return result[0]  # Return the last message time as a string
+            return result[0]
         else:
-            return None  # Return None if the user is not found
+            return None
 
     def set_last_shoutout(self, username):
         last_message_time = datetime.now().isoformat()  # Convert the datetime to a string
@@ -247,9 +237,9 @@ class DB:
         self.cursor.execute("SELECT username FROM shoutout WHERE username = ?", (username,))
         result = self.cursor.fetchone()
         if result:
-            return True  # Return true
+            return True
         else:
-            return False  # Return false
+            return False
 
 
 if __name__ == "__main__":
