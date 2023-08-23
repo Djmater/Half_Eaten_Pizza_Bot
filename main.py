@@ -4,6 +4,9 @@ Importing packages needed for the bot to function,
 """
 from datetime import datetime
 from configparser import ConfigParser
+from typing import Optional, List
+
+from twitchio import ChannelInfo, User
 from twitchio.ext import commands
 from twitchio.ext.commands.errors import MissingRequiredArgument
 from db import DB
@@ -32,8 +35,9 @@ class Bot(commands.Bot):
                          initial_channels=self.twitch_initial_channels)
 
     async def event_ready(self):
-        # Notify us when everything is ready!
-        # We are logged in and ready to chat and use commands...
+        """
+        Notifying that bot is ready and prints command and welcome list
+        """
         print(f'Logged in as | {self.nick}')
         print(f'User id is | {self.user_id}')
         print("""
@@ -52,6 +56,13 @@ autoSo
     
 eg: !autoSo view djmater
         """)
+        print("""
+Welcome List
+        """)
+        for i in db.fetch_names():
+            custom_message = db.check_custom_message(i)
+            final_string = f"{i} - {custom_message}"
+            print(final_string)
 
     async def event_message(self, message):
         """
@@ -148,8 +159,52 @@ eg: !autoSo view djmater
                 if result:
                     await ctx.send(f"{username} new custom message is {custom_message}")
 
+    async def fetch_users(
+            self,
+            names: List[str] = None,
+            ids: List[int] = None,
+            token: str = None,
+            force=False,
+    ) -> List[User]:
+        """
+        Fetch user info on twitch, so we have the Twitch ID
+        :param names:
+        :param ids:
+        :param token:
+        :param force:
+        :return:
+        """
+        data = await self._http.get_users(ids, names, token=token)
+        return data
+
+    async def fetch_channels(self, broadcaster_ids, token: Optional[str] = None):
+        """
+        Fetch Channel information, so we get the game_name
+        :param broadcaster_ids: The twitch id of who you want to search for
+        :param token:
+        :return: Returning a list of data that's in a dictionary
+
+        content_classification_labels
+        delay
+        game_id
+        game_name
+        is_branded_content
+        language
+        tags
+        title
+        user
+        """
+        data = await self._http.get_channels_new(broadcaster_ids=broadcaster_ids, token=token)
+        return data
+
     @commands.command(aliases=("autoso",))
     async def autoSo(self, ctx, command, username):
+        """
+        Command for setting up or viewing auto shoutout
+        :param ctx: Context
+        :param command: The chosen command of View/Toggle
+        :param username: Username of the chosen user
+        """
         user = ctx.author.is_mod
         if user:
             if command.lower() == "view":
@@ -194,18 +249,27 @@ eg: !autoSo view djmater
             return True
 
     async def shoutout_message(self, message_author, message):
+        """
+        Auto shoutout that will shoutout anyone that fulfills the criteria.
+        :param message_author: Who wrote in the chat
+        :param message: Just passing message function into to be able to send message
+        :return: None
+        """
         if db.check_shoutout_user(username=message_author):
             if db.check_shoutout(username=message_author)[0]:
                 if self.check_time_difference(message_author=message_author, type="shoutout"):
                     db.set_last_shoutout(username=message_author)
-                    await message.channel.send(f"/shoutout {message_author}")
+                    result = await self.fetch_users([message_author], token=self.twitch_token)
+                    game_name = await self.fetch_channels([result[0]['id']])
+                    game_name = game_name[0]['game_name']
+                    await message.channel.send(f"Checkout {message_author} they were last playing {game_name} you should deff give them a follow https://twitch.tv/{message_author}")
 
     async def welcome_message(self, message_author, message):
         """
         Here we process if the user is in DB, then if the time difference is big enough then send welcome message
         :param message_author:  Name of the user
         :param message: To send the message in the chat
-        :return:
+        :return: None
         """
         if db.check_user(message_author):
 
