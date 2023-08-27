@@ -2,17 +2,17 @@
 """
 Importing packages needed for the bot to function,
 """
-from datetime import datetime
 from configparser import ConfigParser
+from datetime import datetime
 from typing import Optional, List
 
 from twitchio import User
 from twitchio.ext import commands
-from twitchio.ext.commands.errors import MissingRequiredArgument
-from db import DB
-from config import Config
-from cogs.welcome import WelcomeMessageCog
+
 from cogs.autoso import AutoShoutOut
+from cogs.welcome import WelcomeMessageCog
+from config import Config
+from db import DB
 
 
 class Bot(commands.Bot):
@@ -34,7 +34,6 @@ class Bot(commands.Bot):
         # initial_channels can also be a callable which returns a list of strings...
         super().__init__(token=self.twitch_token, prefix=self.twitch_prefix,
                          initial_channels=self.twitch_initial_channels)
-
 
     async def event_ready(self):
         """
@@ -97,7 +96,7 @@ Welcome List
             # await ctx.send("Command not recognized. Please use valid commands.")
             pass
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Command not recognized, please use: !welcome add/edit/remove <username> <custom_message>")
+            await ctx.send("Command not recognized, Please use valid commands.")
         else:
             pass
             # Handle other exceptions here if needed
@@ -141,16 +140,17 @@ Welcome List
         data = await self._http.get_channels_new(broadcaster_ids=broadcaster_ids, token=token)
         return data
 
-    def check_time_difference(self, message_author, type):
+    def check_time_difference(self, message_author, time_difference_type):
         """
         Checking if the user has waited long enough for Welcome message to be sent
-        :param type: what type of type check, if its shoutout or welcome
+        :param time_difference_type: what type of type check, if its shoutout or welcome
         :param message_author: username of the user we are checking
         :return: True if it's true
         """
-        if type == "welcome":
+        timestamp_str = ''
+        if time_difference_type == "welcome":
             timestamp_str = db.check_last_message(message_author)
-        elif type == "shoutout":
+        elif time_difference_type == "shoutout":
             timestamp_str = db.check_last_shoutout(message_author)
         timestamp = datetime.fromisoformat(timestamp_str)
         current_time = datetime.now()
@@ -170,7 +170,7 @@ Welcome List
         """
         if db.check_shoutout_user(username=message_author):
             if db.check_shoutout(username=message_author)[0]:
-                if self.check_time_difference(message_author=message_author, type="shoutout"):
+                if self.check_time_difference(message_author=message_author, time_difference_type="shoutout"):
                     db.set_last_shoutout(username=message_author)
                     result = await self.fetch_users([message_author], token=self.twitch_token)
                     game_name = await self.fetch_channels([result[0]['id']])
@@ -188,7 +188,7 @@ Welcome List
         if db.check_user(message_author):
 
             # Checking if sufficient time has passed
-            if self.check_time_difference(message_author, type="welcome"):
+            if self.check_time_difference(message_author, time_difference_type="welcome"):
 
                 # Setting new chatting time
                 db.set_last_message(message_author)
@@ -209,7 +209,7 @@ if __name__ == "__main__":
         db = DB()
         bot = Bot(config)
         bot.add_cog(WelcomeMessageCog(bot, db))
-        bot.add_cog(AutoShoutOut(bot,db))
+        bot.add_cog(AutoShoutOut(bot, db))
         bot.run()
     except Exception as e:
         print(e)

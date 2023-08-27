@@ -47,6 +47,12 @@ class AutoShoutOut(commands.Cog):
         await ctx.send(f"Auto shoutout for {username} is currently {status}")
 
     async def toggle(self, ctx, username):
+        """
+        Toggle status
+        :param ctx: Context
+        :param username: Username of who you want to toggle
+        :return: None
+        """
         if not username:
             raise MissingRequiredArgument("username")
 
@@ -57,4 +63,4 @@ class AutoShoutOut(commands.Cog):
             await ctx.send(f"{username} is added to the auto shoutout list")
         else:
             status = "On" if flag else "Off"
-            await ctx.send(f"Auto shoutout is set to {status} on {username}")
+            await ctx.send(f"Auto shoutout is set to {status} for {username}")

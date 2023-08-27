@@ -32,9 +32,16 @@ class WelcomeMessageCog(commands.Cog):
         if handler:
             await handler(ctx, username, custom_message)
         else:
-            await ctx.send("Command not recognized. Please use valid commands.")
+            await ctx.send("Command not recognized. Please use: !welcome add/edit/remove/view <username> <custom_message>.")
 
     async def view_welcome_message(self, ctx, username, custom_message):
+        """
+        View custom message for user
+        :param ctx: Context
+        :param username: Username of who you are going add
+        :param custom_message: Not used but can not be removed
+        :return: None
+        """
         if not username:
             raise MissingRequiredArgument("username")
 
@@ -46,6 +53,13 @@ class WelcomeMessageCog(commands.Cog):
             await ctx.send(f"No custom message found for {username}")
 
     async def remove_user(self, ctx, username, custom_message):
+        """
+        Remove user from welcome list
+        :param ctx: Context
+        :param username: Username of who you are going add
+        :param custom_message: Not used but can not be removed
+        :return: None
+        """
         if not username:
             raise MissingRequiredArgument("username")
 
@@ -56,6 +70,13 @@ class WelcomeMessageCog(commands.Cog):
             await ctx.send(f"{username} is not recognized or is not on the welcome list.")
 
     async def add_user(self, ctx, username, custom_message):
+        """
+        Add user to welcome list
+        :param ctx: Context
+        :param username: Username of who you are going add
+        :param custom_message: Custom message you want to add to the user
+        :return: None
+        """
         if not username or not custom_message:
             raise MissingRequiredArgument("username and custom_message")
 
@@ -69,6 +90,13 @@ class WelcomeMessageCog(commands.Cog):
             await ctx.send("User already exists in the welcome list.")
 
     async def edit_user(self, ctx, username, custom_message):
+        """
+        Edit custom message for user
+        :param ctx: Context
+        :param username: Username of who you want to change message on
+        :param custom_message: New custom message
+        :return: None
+        """
         if not username or not custom_message:
             raise MissingRequiredArgument("username and custom_message")
 
