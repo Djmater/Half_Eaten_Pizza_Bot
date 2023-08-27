@@ -11,6 +11,7 @@ from twitchio.ext import commands
 
 from cogs.autoso import AutoShoutOut
 from cogs.welcome import WelcomeMessageCog
+from cogs.quote import Quote
 from config import Config
 from db import DB
 
@@ -210,6 +211,7 @@ if __name__ == "__main__":
         bot = Bot(config)
         bot.add_cog(WelcomeMessageCog(bot, db))
         bot.add_cog(AutoShoutOut(bot, db))
+        bot.add_cog(Quote(bot, db))
         bot.run()
     except Exception as e:
         print(e)
