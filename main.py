@@ -78,7 +78,7 @@ Welcome List
             return
 
         # Print the contents of our message to console...
-        print(message.content, message.author.id)
+        print(f"{message.author.name}: {message.content}")
 
         await self.handle_commands(message)
 
