@@ -3,7 +3,7 @@
 
 ## Table of Contents
 
-- [Project Name](#Half-Eaten Pizza bot)
+
   - [Table of Contents](#table-of-contents)
   - [About](#about)
   - [Features](#features)
